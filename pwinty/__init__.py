@@ -6,10 +6,10 @@ http://www.github.com/samwillis/py-pwinty
 
 """
 
-import requests  # The onle none standard requirement
-import json
-import pprint
+import requests  # The only none standard requirement
 import hashlib
+import json
+import os
 
 
 apikey = None       # Set to your Pwinty API Key
@@ -19,8 +19,8 @@ sandbox = False     # Sets whether to use the sandbox or live API
 VERSION = '0.3'
 
 # The HTTP endpoints for the api
-LIVE_API_URL = "https://api.pwinty.com/v2/"
-SANDBOX_API_URL = "https://sandbox.pwinty.com/v2/"
+LIVE_API_URL = "https://api.pwinty.com/v2.2/"
+SANDBOX_API_URL = "https://sandbox.pwinty.com/v2.2/"
 
 
 def set_apikey(value):
@@ -30,6 +30,7 @@ def set_apikey(value):
     >>> import pwinty
     >>> pwinty.apikey = "xxxxxxx"
     """
+    global apikey
     apikey = value
 
 def set_merchantid(value):
@@ -39,6 +40,7 @@ def set_merchantid(value):
     >>> import pwinty
     >>> pwinty.merchantid = "xxxxxxx"
     """
+    global merchantid
     merchantid = value
 
 def underscore_to_camelcase(value):
@@ -124,7 +126,6 @@ def _request(end_point, method, params=None, data=None, files=None):
     if files:
         files = underscore_to_camelcase_dict(files)
 
-    print method, url + end_point
     r = requests.request(method, url + end_point, headers=headers, params=params, data=data, files=files)
 
     if r.status_code in (200, 201):
@@ -177,7 +178,7 @@ class Resource(object):
         return self.get_dict().items()
 
     def values(self):
-        return seld.get_dict().values()
+        return self.get_dict().values()
 
     def __getattr__(self, name):
         name = underscore_to_camelcase(name)
@@ -228,29 +229,24 @@ class Photo(Resource):
     def create(cls, order_id, **kwargs):
         files = None
         file_opend = False
-        md5 = None
         file_obj = None
 
         try:
             if "file_path" in kwargs:
-                # We have a file path so open file, make md5 hash and add to files to upload
-                file_obj = open(kwargs['file_path'], 'rb')
+                file_obj = open(kwargs.pop('file_path'), 'rb')
                 file_opend = True
-                md5 = hashlib.md5(file_obj.read()).hexdigest()
-                files = {'file': f}
-                del kwargs['file_path']
 
             elif "file" in kwargs:
-                # We have an open file so make an md5 hash and add to files to upload
-                file_obj = kwargs['file']
-                md5 = hashlib.md5(file_obj.read()).hexdigest()
-                files = {'file': f}
-                del kwargs['file']
+                file_obj = kwargs.pop('file')
 
             elif "url" not in kwargs:
                 raise PwintyException("file_path, file OR url required")
 
-            if md5:
+            if file_obj:
+                md5 = hashlib.md5(file_obj.read()).hexdigest()
+                file_obj.seek(0)  # The file will be read again for transmission
+                filename = os.path.basename(file_obj.name)
+                files = {'file': (filename, file_obj, 'image/jpeg')}  # pwinty requires mime
                 kwargs['md5Hash'] = md5
 
             res = _request('Orders/%s/Photos' % order_id, 'POST', data=kwargs, files=files)
@@ -268,7 +264,7 @@ class Photo(Resource):
 
     def delete(self):
         res = _request('Orders/%s/Photos/%s' % (self.order_id, self.id), 'DELETE')
-        return cls(res)
+        return self.__class__(res)
 
 
 class OrderPhotos(object):
