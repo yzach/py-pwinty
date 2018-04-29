@@ -16,11 +16,12 @@ apikey = None       # Set to your Pwinty API Key
 merchantid = None   # Set to your Pwinty API Merchant ID
 sandbox = False     # Sets whether to use the sandbox or live API
 
-VERSION = '0.3'
+VERSION = '0.3.1'
+API_VERSION = 'v2.6'
 
 # The HTTP endpoints for the api
-LIVE_API_URL = "https://api.pwinty.com/v2.2/"
-SANDBOX_API_URL = "https://sandbox.pwinty.com/v2.2/"
+LIVE_API_URL = "https://api.pwinty.com/%s/" % API_VERSION
+SANDBOX_API_URL = "https://sandbox.pwinty.com/%s/" % API_VERSION
 
 
 def set_apikey(value):
