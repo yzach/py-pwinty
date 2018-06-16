@@ -17,7 +17,7 @@ merchantid = None   # Set to your Pwinty API Merchant ID
 sandbox = False     # Sets whether to use the sandbox or live API
 
 VERSION = '0.3.1'
-API_VERSION = 'v2'
+API_VERSION = 'v2.2'
 
 # The HTTP endpoints for the api
 LIVE_API_URL = "https://api.pwinty.com/%s/" % API_VERSION
