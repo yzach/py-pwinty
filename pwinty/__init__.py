@@ -285,7 +285,7 @@ class OrderPhotos(object):
 
 class Order(Resource):
     _id_field_name = 'id'
-    _editable_fields = ('recipientName', 'address1', 'address2', 'addressTownOrCity', 'stateOrCounty', 'postalOrZipCode')
+    _editable_fields = ('recipientName', 'address1', 'address2', 'addressTownOrCity', 'stateOrCounty', 'postalOrZipCode', 'preferredShippingMethod',)
 
     @classmethod
     def create(cls, **kwargs):
