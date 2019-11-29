@@ -131,7 +131,7 @@ def _request(end_point, method, params=None, data=None, files=None):
 
     if r.status_code in (200, 201):
         if r.text:
-            return json.loads(r.text)
+            return json.loads(r.text)['data']
         else:
             return r.content
     else:
