@@ -17,7 +17,7 @@ merchantid = None   # Set to your Pwinty API Merchant ID
 sandbox = False     # Sets whether to use the sandbox or live API
 
 VERSION = '0.3.1'
-API_VERSION = 'v2.6'
+API_VERSION = 'v3.0'
 
 # The HTTP endpoints for the api
 LIVE_API_URL = "https://api.pwinty.com/%s/" % API_VERSION
@@ -131,7 +131,7 @@ def _request(end_point, method, params=None, data=None, files=None):
 
     if r.status_code in (200, 201):
         if r.text:
-            return json.loads(r.text)
+            return json.loads(r.text)['data']
         else:
             return r.content
     else:
@@ -218,8 +218,8 @@ class Resource(object):
 
 class Catalogue(Resource):
     @classmethod
-    def get(cls, country_code, quality_level='Standard'):
-        res = _request('Catalogue/%s/%s' % (country_code, quality_level), 'GET')
+    def get(cls, country_code):
+        res = _request('Catalogue/prodigi%20direct/destination/%s/prices' % (country_code,), 'GET')
         return cls(res)
 
 
@@ -250,7 +250,7 @@ class Photo(Resource):
                 files = {'file': (filename, file_obj, 'image/jpeg')}  # pwinty requires mime
                 kwargs['md5Hash'] = md5
 
-            res = _request('Orders/%s/Photos' % order_id, 'POST', data=kwargs, files=files)
+            res = _request('Orders/%s/Images' % order_id, 'POST', data=kwargs, files=files)
 
         finally:
             if file_opend:
@@ -260,11 +260,11 @@ class Photo(Resource):
     
     @classmethod
     def get(cls, order_id, id):
-        res = _request('Orders/%s/Photos/%s' % (order_id, id), 'GET')
+        res = _request('Orders/%s/Images/%s' % (order_id, id), 'GET')
         return cls(res)
 
     def delete(self):
-        res = _request('Orders/%s/Photos/%s' % (self.order_id, self.id), 'DELETE')
+        res = _request('Orders/%s/Images/%s' % (self.order_id, self.id), 'DELETE')
         return self.__class__(res)
 
 
@@ -279,13 +279,13 @@ class OrderPhotos(object):
         return Photo.get(self._order_id, id)
 
     def all(self):
-        res = _request('Orders/%s/Photos' % self._order_id, 'GET')
+        res = _request('Orders/%s/Images' % self._order_id, 'GET')
         return [Photo(o) for o in res]
 
 
 class Order(Resource):
     _id_field_name = 'id'
-    _editable_fields = ('recipientName', 'address1', 'address2', 'addressTownOrCity', 'stateOrCounty', 'postalOrZipCode')
+    _editable_fields = ('recipientName', 'address1', 'address2', 'addressTownOrCity', 'stateOrCounty', 'postalOrZipCode', 'preferredShippingMethod',)
 
     @classmethod
     def create(cls, **kwargs):
@@ -381,4 +381,5 @@ class PwintyServerError(PwintyError):
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
+
 
